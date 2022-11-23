@@ -1,0 +1,48 @@
+package com.example.simbirsoft.presentation.DetailFragment
+
+import android.os.Bundle
+import android.text.format.DateFormat
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.navigation.fragment.navArgs
+import com.example.simbirsoft.R
+import com.example.simbirsoft.databinding.FragmentDetailBinding
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import java.util.*
+
+
+class DetailFragment : BottomSheetDialogFragment() {
+
+    private val args : DetailFragmentArgs by navArgs()
+    private var _binding: FragmentDetailBinding?=null
+    private val binding: FragmentDetailBinding
+        get() = _binding ?: throw RuntimeException("FragmentDetailBinding == null")
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        _binding = FragmentDetailBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        binding.nameTask.setText(args.task.name)
+        binding.descriptionTask.setText(args.task.name)
+        binding.timeTask.text = "${convertLongToTime(args.task.timeStart)} : ${convertLongToTime(args.task.timeEnd)}"
+        binding.dateTask.text = convertDate(args.task.date)
+    }
+
+    private fun convertLongToTime(time: Long): String = String.format("%02d:%02d", time / 60, time % 60)
+
+    private fun convertDate(date: Date): String = DateFormat.format("MM:dd:yyyy", date.time).toString()
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+    }
+}
