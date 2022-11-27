@@ -7,6 +7,7 @@ import androidx.lifecycle.AndroidViewModel
 import com.example.simbirsoft.data.entity.Task
 import com.example.simbirsoft.data.repository.TaskRepositoryImpl
 import com.example.simbirsoft.data.room.DatabaseTask
+import com.example.simbirsoft.domain.usecase.AddTaskUseCase
 import com.example.simbirsoft.domain.usecase.GetListTaskUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +35,7 @@ class AddViewModel(application: Application):AndroidViewModel(application) {
 
     fun addTask(task: Task){
         coroutine.launch {
-            repositoryRoom.addTask(task)
+            AddTaskUseCase(repositoryRoom).addTask(task)
         }
     }
 
