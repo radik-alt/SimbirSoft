@@ -1,17 +1,15 @@
 package com.example.simbirsoft.presentation.AddTaskFragment
 
 import android.app.Application
+import android.content.Context
 import android.widget.Toast
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.MutableLiveData
-import androidx.lifecycle.ViewModel
 import com.example.simbirsoft.data.entity.Task
-import com.example.simbirsoft.data.repository.TaskRepository
+import com.example.simbirsoft.data.repository.TaskRepositoryImpl
 import com.example.simbirsoft.data.room.DatabaseTask
-import com.example.simbirsoft.domain.entity.TimeUnvailbale
+import com.example.simbirsoft.domain.usecase.GetListTaskUseCase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.util.Date
 
@@ -19,23 +17,17 @@ class AddViewModel(application: Application):AndroidViewModel(application) {
 
     private val coroutine = CoroutineScope(Dispatchers.Default)
     private val dao = DatabaseTask.getDatabaseNotes(application).myTaskDao()
-    private val repositoryRoom = TaskRepository(dao)
+    private val repositoryRoom = TaskRepositoryImpl(dao)
 
     var timeStart:Long = 0L
     var timeEnd:Long = 0L
     var date: Date = Date()
-    private var timeList = ArrayList<TimeUnvailbale>()
+    private var timeList = ArrayList<Task>()
 
     fun getAllWorkTime(){
         coroutine.launch{
-            repositoryRoom.getListTask().collect{
-                for (i in it){
-                    val timeUnvailbale = TimeUnvailbale(
-                        startTime = i.timeStart,
-                        endTime = i.timeEnd
-                    )
-                    timeList.add(timeUnvailbale)
-                }
+            GetListTaskUseCase(repositoryRoom).getListTaskUseCase().collect{
+                timeList.addAll(it)
             }
         }
     }
@@ -46,30 +38,52 @@ class AddViewModel(application: Application):AndroidViewModel(application) {
         }
     }
 
-    fun valid(task: Task):Boolean{
-        return if (task.name.isEmpty() ||
-            task.name.trim().length<3){
-            false
-        } else validTime(task.timeStart, task.timeEnd)
+    fun validErrorTask(task: Task):String?{
+        return when{
+            task.name.isEmpty() || task.name.trim().length<3 -> {
+                errorName
+            }
+            validTimeOfSize(task.timeStart, task.timeEnd) ->{
+                errorLengthTime
+            }
+            !validTime(task.timeStart, task.timeEnd) -> {
+                errorExistTaskOfTime
+            }
+            else -> null
+        }
     }
 
-    fun validTime(startTime:Long, endTime:Long):Boolean{
-        var correctTime = true
-        for (time in timeList){
-            if (startTime >= time.startTime && startTime <= time.endTime){
-                correctTime = false
-                break
-            } else if (endTime <= time.endTime){
-                correctTime = false
-                break
+    private fun validTimeOfSize(selectStartTime:Long, selectEndTime:Long) = selectStartTime+ hour <= selectEndTime
+
+    fun validTime(selectStartTime:Long, selectEndTime:Long):Boolean{
+        var validTime = true
+
+        val list = getFilterOfDateList()
+        for (workTime in list){
+            if (workTime.timeStart in selectStartTime..selectEndTime) {
+                validTime = false
+            }
+            else if (workTime.timeEnd in selectStartTime..selectEndTime) {
+                validTime = false
             }
         }
 
-        return if (startTime >= endTime+30){
-            false
-        } else true
+        return validTime
     }
 
+    private fun getFilterOfDateList() = timeList.filter {
+        it.date.date.compareTo(date.date) == 0
+    }
 
+    fun showToast(context: Context, error:String){
+        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
+    }
 
+    companion object{
+        private const val hour = 60
+        private const val errorName = "Неккоректный ввод названия"
+        private const val errorLengthTime = "Минимальное время задачи 1 час"
+        private const val errorExistTaskOfTime = "На это время уже есть задача! Можете удалить ее и назначить новую задачу!"
+    }
 }
+

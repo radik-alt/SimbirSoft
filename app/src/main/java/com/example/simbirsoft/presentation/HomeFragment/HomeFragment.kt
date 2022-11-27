@@ -1,6 +1,8 @@
 package com.example.simbirsoft.presentation.HomeFragment
 
+import android.app.DatePickerDialog
 import android.os.Bundle
+import android.text.format.DateFormat
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -11,8 +13,10 @@ import com.example.simbirsoft.R
 import com.example.simbirsoft.data.entity.Task
 import com.example.simbirsoft.databinding.FragmentHomeBinding
 import com.example.simbirsoft.presentation.AddTaskFragment.AddTaskFragment
+import com.example.simbirsoft.presentation.Utils
 import com.example.simbirsoft.presentation.adapter.Interface.OnClickTask
 import com.example.simbirsoft.presentation.adapter.TaskAdapter
+import java.util.*
 
 
 class HomeFragment : Fragment() {
@@ -63,7 +67,25 @@ class HomeFragment : Fragment() {
         binding.customToolbar.addTask.setOnClickListener {
             showBottomFragment()
         }
+
+        binding.selectDate.setOnClickListener {
+            val calendar = Calendar.getInstance()
+            val year = calendar.get(Calendar.YEAR)
+            val month = calendar.get(Calendar.MONTH)
+            val day = calendar.get(Calendar.DAY_OF_MONTH)
+
+
+            DatePickerDialog(requireActivity(), DatePickerDialog.OnDateSetListener { view, year, monthOfYear, dayOfMonth ->
+                val currentDate = Calendar.getInstance()
+                currentDate.set(year, monthOfYear, dayOfMonth)
+                homeViewModel.setSelectDate(currentDate.time)
+
+                val selectDate = homeViewModel.getSelectDate()
+                binding.selectDate.text = Utils().convertDate(selectDate)
+            }, year, month, day).show()
+        }
     }
+
 
     private fun showBottomFragment(){
         val bottomFragment = AddTaskFragment()

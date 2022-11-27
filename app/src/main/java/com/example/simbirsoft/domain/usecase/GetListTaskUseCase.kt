@@ -1,14 +1,13 @@
 package com.example.simbirsoft.domain.usecase
 
 import com.example.simbirsoft.data.entity.Task
-import com.example.simbirsoft.data.repository.TaskRepository
-import com.example.simbirsoft.data.room.DaoTask
+import com.example.simbirsoft.domain.repository.TaskRepository
 import kotlinx.coroutines.flow.Flow
 
-class GetListTaskUseCase (private val daoTask: DaoTask) {
+class GetListTaskUseCase (private val taskRepository: TaskRepository) {
 
     fun getListTaskUseCase(): Flow<List<Task>> {
-        return TaskRepository(daoTask).getListTask()
+        return taskRepository.getListTask()
     }
 
 }
